@@ -29,34 +29,55 @@ func main() {
 	for {
 		fmt.Print("\nλ ")
 		r := bufio.NewReader(os.Stdin)
-		input, _ := r.ReadString('\n')
+		sexp, _ := r.ReadString('\n')
 
-		if input == "(exit)\n" {
+		if strings.TrimSpace(sexp) == "" {
+			continue
+		}
+
+		if sexp == "(exit)\n" {
 			fmt.Println("Bye!")
 			os.Exit(0)
 		}
 
-		var stack nestStack
+		eval(sexp)
 
-		for i, r := range input {
-			switch r {
-			case '(':
-				stack.Push(i)
-
-			case ')':
-				iOpen, err := stack.Pop()
-				if err != nil {
-					log.Fatal(err)
-				}
-				innerSexp := input[iOpen : i+1]
-				eval(innerSexp)
-			}
-		}
 	}
 }
 
 func eval(sexp string) {
-	atoms := strings.Split(strings.Trim(sexp, "()"), " ")
+	iOpen := 0
+	iClose := 0
+
+	for i, r := range sexp {
+		if r == '(' {
+			iOpen = i
+		} else if r == ')' {
+			iClose = i
+            break
+		}
+	}
+
+	innerSexp := sexp[iOpen : iClose+1]
+	result := evalInner(innerSexp)
+
+	if iOpen == 0 {
+		fmt.Printf("  %v\n", result)
+		return
+	}
+
+	sexp = strings.Replace(
+		sexp,
+		innerSexp,
+		fmt.Sprintf("%v", result),
+		1,
+	)
+	fmt.Printf("  %s", sexp)
+    eval(sexp)
+}
+
+func evalInner(sexp string) int {
+	atoms := strings.Fields(strings.Trim(sexp, "()"))
 	fnStr := atoms[0]
 
 	arg1Str := atoms[1]
@@ -72,22 +93,5 @@ func eval(sexp string) {
 	}
 
 	fn := fns[fnStr]
-	fmt.Println(fn(arg1, arg2))
-}
-
-type nestStack []int
-
-func (s *nestStack) Push(val int) {
-	*s = append(*s, val)
-}
-
-func (s *nestStack) Pop() (int, error) {
-	if len(*s) == 0 {
-		return 0, fmt.Errorf("Empty stack")
-	}
-
-	popped := (*s)[len(*s)-1]
-	*s = (*s)[:len(*s)-1]
-
-	return popped, nil
+	return fn(arg1, arg2)
 }
