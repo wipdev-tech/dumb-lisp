@@ -5,7 +5,24 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
+	"strings"
 )
+
+var fns = map[string]func(int, int) int{
+	"+": func(a int, b int) int {
+		return a + b
+	},
+	"-": func(a int, b int) int {
+		return a - b
+	},
+	"*": func(a int, b int) int {
+		return a * b
+	},
+	"/": func(a int, b int) int {
+		return a / b
+	},
+}
 
 func main() {
 	fmt.Println("Welcome to Dumb Lisp!")
@@ -39,7 +56,23 @@ func main() {
 }
 
 func eval(sexp string) {
-	fmt.Println(sexp)
+	atoms := strings.Split(strings.Trim(sexp, "()"), " ")
+	fnStr := atoms[0]
+
+	arg1Str := atoms[1]
+	arg1, err := strconv.Atoi(arg1Str)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	arg2Str := atoms[2]
+	arg2, err := strconv.Atoi(arg2Str)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fn := fns[fnStr]
+	fmt.Println(fn(arg1, arg2))
 }
 
 type nestStack []int
