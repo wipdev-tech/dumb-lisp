@@ -8,31 +8,38 @@ import (
 )
 
 func main() {
-	fmt.Print("λ ")
+	fmt.Println("Welcome to Dumb Lisp!")
+	for {
+		fmt.Print("\nλ ")
+		r := bufio.NewReader(os.Stdin)
+		input, _ := r.ReadString('\n')
 
-	r := bufio.NewReader(os.Stdin)
-	input, _ := r.ReadString('\n')
+		if input == "(exit)\n" {
+			fmt.Println("Bye!")
+			os.Exit(0)
+		}
 
-	var stack nestStack
+		var stack nestStack
 
-	for i, r := range input {
-		switch r {
-		case '(':
-			stack.Push(i)
+		for i, r := range input {
+			switch r {
+			case '(':
+				stack.Push(i)
 
-		case ')':
-			iOpen, err := stack.Pop()
-			if err != nil {
-				log.Fatal(err)
+			case ')':
+				iOpen, err := stack.Pop()
+				if err != nil {
+					log.Fatal(err)
+				}
+				innerSexp := input[iOpen : i+1]
+				eval(innerSexp)
 			}
-            innerSexp := input[iOpen : i+1]
-			eval(innerSexp)
 		}
 	}
 }
 
 func eval(sexp string) {
-    fmt.Println(sexp)
+	fmt.Println(sexp)
 }
 
 type nestStack []int
